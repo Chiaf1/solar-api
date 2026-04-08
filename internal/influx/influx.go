@@ -9,7 +9,7 @@ import (
 type Client struct {
 	c      influxdb2.Client
 	org    string
-	bucket string
+	Bucket string
 }
 
 // Returns the pointer to a Client struct with the influxdb2 client
@@ -17,7 +17,7 @@ func New(url, token, org, bucket string) *Client {
 	return &Client{
 		c:      influxdb2.NewClient(url, token),
 		org:    org,
-		bucket: bucket,
+		Bucket: bucket,
 	}
 }
 

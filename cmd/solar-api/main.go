@@ -31,11 +31,14 @@ func main() {
 	flux := fmt.Sprintf(`from(bucket: "%s")
 	|> range(start: today(), stop: now())
 	|> filter(fn: (r) => r._measurement == "energy")
-	|> aggregateWindow(every: 1m, fn: mean)
-	|> yield()`, conf.InfluxDB.Bucket)
+	|> filter(fn: (r) => r._field == "production" or r._field == "consumption")
+	|> sort(columns: ["_time"])`, conf.InfluxDB.Bucket)
 	test, err := infClient.Query(context.Background(), flux)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(test)
+	for i, l := range test {
+		fmt.Printf("[%v]: _time:%v, _measurement:%v, _field: %v, _value: %v \n", i, l["_time"], l["_measurement"], l["_field"], l["_value"])
+	}
+	//fmt.Println(test)
 }
