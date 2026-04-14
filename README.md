@@ -8,7 +8,6 @@ Le tipologie di possibili "interroggazioni" che ho pensato sono:
 L'idea era di visualizzare i dati in formato grafico e sempre avere i dati dalle ore 00:00 aller ore 24:59 in modo da avere i grafici tutti con la stessa scala più facili da confrontare
 
 ### Idee per endepoint:
-GET /metrics/today
-GET /metrics/week/previus
-GET /metrics/day/{date}
-GET /metrics/range?start=...&end=...
+GET /energy/today
+GET /energy/yesterday
+GET /energy/daily?from=YYYY-MM-DD&to=YYYY-MM-DD&window=10m
