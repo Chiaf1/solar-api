@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/chiaf1/solar-api/internal/config"
 	"github.com/chiaf1/solar-api/internal/influx"
@@ -47,7 +48,8 @@ func main() {
 	repo := metrics.NewRepository(infClient)
 	service := metrics.NewService(repo)
 
-	test, err := service.GetTodayEnergy(context.Background())
+	//test, err := service.GetTodayEnergy(context.Background())
+	test, err := service.GetRangeEnergyByDay(context.Background(), time.Now(), time.Now(), "")
 	if err != nil {
 		panic(err)
 	}
