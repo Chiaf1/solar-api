@@ -2,16 +2,20 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
+	"github.com/chiaf1/solar-api/internal/api"
 	"github.com/chiaf1/solar-api/internal/config"
 	"github.com/chiaf1/solar-api/internal/influx"
 	"github.com/chiaf1/solar-api/internal/metrics"
 )
 
-const CONFIG_PATH = `C:\Generale\Progetti\Lettura produzione e consumo arduino\solar-api\config.yaml`
+const CONFIG_PATH = `./config.yaml`
 
 func main() {
 	// Load configs from file
@@ -26,32 +30,45 @@ func main() {
 	}
 	log.Println("Config Loaded")
 
-	// Creating an influx db client and testing some querys
+	// Creating an influx db client
 	infClient := influx.New(conf.InfluxDB.Url, conf.InfluxDB.Token, conf.InfluxDB.Org, conf.InfluxDB.Bucket)
 
-	//test query
-	/*
-		flux := fmt.Sprintf(`from(bucket: "%s")
-		|> range(start: today(), stop: now())
-		|> filter(fn: (r) => r._measurement == "energy")
-		|> filter(fn: (r) => r._field == "production" or r._field == "consumption")
-		|> sort(columns: ["_time"])`, conf.InfluxDB.Bucket)
-		test, err := infClient.Query(context.Background(), flux)
-		if err != nil {
-			panic(err)
-		}
-		for i, l := range test {
-			fmt.Printf("[%v]: _time:%v, _measurement:%v, _field: %v, _value: %v \n", i, l["_time"], l["_measurement"], l["_field"], l["_value"])
-		}
-		//fmt.Println(test)
-	*/
+	// Creating the repo, service and handler layers to serve the API router
 	repo := metrics.NewRepository(infClient)
 	service := metrics.NewService(repo)
+	handler := api.NewHandler(service)
 
-	//test, err := service.GetTodayEnergy(context.Background())
-	test, err := service.GetRangeEnergyByDay(context.Background(), time.Now(), time.Now(), "")
-	if err != nil {
-		panic(err)
+	// Creating the router for the API endpoints
+	router := api.NewRouter(handler)
+
+	// Creating an HTTP server to handle graceful shutdowns
+	srv := http.Server{
+		Addr:    ":8080",
+		Handler: router,
 	}
-	fmt.Println(test)
+
+	// Starting the server in a go routine
+	go func() {
+		log.Println("Api listening on :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Listen error: %v", err)
+		}
+	}()
+
+	//Waiting for shutdown signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutdown signal received")
+
+	// Graceful shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
+	}
+
+	log.Println("Server exited cleanly")
 }
