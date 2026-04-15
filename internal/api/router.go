@@ -4,14 +4,15 @@ package api
 
 import "github.com/gin-gonic/gin"
 
-func SetupRouter(h *Handler) *gin.Engine {
+// Creates the router of the http endpoints for the api
+func NewRouter(h *Handler) *gin.Engine {
 	r := gin.Default()
 
 	energy := r.Group("/energy")
 	{
-		energy.GET("/today")
-		energy.GET("/yesterday")
-		energy.GET("/daily")
+		energy.GET("/today", h.GetTodayEnergy)
+		energy.GET("/yesterday", h.GetYesterdayEnergy)
+		energy.GET("/daily", h.GetDailyEnergyRange)
 	}
 
 	return r

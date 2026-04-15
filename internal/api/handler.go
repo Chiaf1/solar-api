@@ -8,6 +8,7 @@ type Handler struct {
 	metrics *metrics.Service
 }
 
+// Creates a new handler to handle http responses
 func NewHandler(metricService *metrics.Service) *Handler {
 	return &Handler{
 		metrics: metricService,
