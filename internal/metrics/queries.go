@@ -43,7 +43,7 @@ func (r *Repository) QueryEnergyData(ctx context.Context, start, stop, window st
 
 	flux += `|> sort(columns: ["_time"])`
 
-	results, err := r.influx.Query(context.Background(), flux)
+	results, err := r.influx.Query(ctx, flux)
 	if err != nil {
 		return nil, err
 	}

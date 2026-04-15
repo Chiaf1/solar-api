@@ -29,7 +29,12 @@ func (s *Service) GetTodayEnergy(ctx context.Context) ([]EnergyPoint, error) {
 
 // Returs a slice of EnergergyPoints of yesterday
 func (s *Service) GetYesterdayEnergy(ctx context.Context) ([]EnergyPoint, error) {
-	return s.repo.QueryEnergyData(ctx, "yesterday()", "today()", "2m")
+	now := time.Now().UTC()
+
+	startDay := truncateToDay(now.AddDate(0, 0, -1))
+	stopDay := truncateToDay(now)
+
+	return s.repo.QueryEnergyData(ctx, startDay.Format(time.RFC3339), stopDay.Format(time.RFC3339), "2m")
 }
 
 // Returs a slice of EnergergyPoints of a set range
